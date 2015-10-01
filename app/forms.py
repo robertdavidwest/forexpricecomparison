@@ -19,4 +19,13 @@ class QueryFXQuotes(Form):
 
     source_value = SelectField('Source Value',
                            validators=[DataRequired()],
-                           choices=[('All', 'All'), ('100', '100')])
+                           choices=[('All', 'All'),
+                                    ('100', '100'),
+                                    ('500', '500'),
+                                    ('1000', '1000'),
+                                    ('5000', '5000'),
+                                    ('10000', '10000'),
+                                    ('50000', '50000'),
+                                    ('100000', '100000'),
+                                    ])
+
