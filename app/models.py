@@ -7,7 +7,7 @@ class FXQuotes(db.Model):
     primary_key = db.Column(db.Integer, primary_key=True)
     provider = db.Column(db.String, nullable=False)
     provider_href = db.Column(db.String, nullable=False)
-    quote_time = db.Column(db.Date, nullable=False)
+    quote_time = db.Column(db.DATETIME, nullable=False)
     source_currency = db.Column(db.String, nullable=False)
     target_currency = db.Column(db.String, nullable=False)
     fee = db.Column(db.DECIMAL, nullable=False)
