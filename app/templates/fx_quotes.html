@@ -1,0 +1,75 @@
+{% extends "template.html" %}
+{% block content %}
+    <h1>Forex Price Comparison</h1>
+    <div class="filter-data">
+        <h3>Compare dozens of brokers and other sources of foreign exchange:</h3>
+            <form action = "{{ url_for('quote_table') }}" method="post">
+                {{ form.csrf_token }}
+
+                {{ form.source_currency.label }}
+                {{ form.source_currency(class="form-control", style="max-width:80px;") }}
+                <span class="error">
+                    {% if form.source_currency.errors %}
+                        {% for error in form.source_currency.errors %}
+                            {{ error }}
+                        {% endfor %}
+                    {% endif %}
+                </span>
+
+                {{ form.target_currency.label }}
+                {{ form.target_currency(class="form-control", style="max-width:80px;") }}
+                <span class="error">
+                    {% if form.target_currency.errors %}
+                        {% for error in form.target_currency.errors %}
+                            {{ error }}
+                        {% endfor %}
+                    {% endif %}
+                </span>
+
+                {{ form.source_value.label }}
+                {{ form.source_value(class="form-control", style="max-width:80px;") }}
+                <span class="error">
+                    {% if form.source_value.errors %}
+                        {% for error in form.source_value.errors %}
+                            {{ error }}
+                        {% endfor %}
+                    {% endif %}
+                </span>
+                <br>
+                <br>
+                <p><button class="btn btn-sm btn-success" type="submit">Submit</button></p>
+            </form>
+    </div>
+
+    <div class="entries">
+        <br>
+        <br>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Source Currency</th>
+                    <th>Target Currency</th>
+                    <th>Source Value</th>
+                    <th>Target Value</th>
+                    <th>Fee</th>
+                    <th>Quote Time</th>
+                    <th>Provider</th>
+                </tr>
+            </thead>
+            {% for o in current_view %}
+                <tr>
+                    <td>{{ o.source_currency }}</td>
+                    <td>{{ o.target_currency }}</td>
+                    <td>{{ o.source_value }}</td>
+                    <td>{{ o.target_value }}</td>
+                    <td>{{ o.fee }}</td>
+                    <td>{{ o.quote_time }}</td>
+                    <td>
+                        <a href="{{ o.provider_href }}"> {{ o.provider }} </a></td>
+                </tr>
+            {% endfor %}
+        </table>
+        <br>
+        <br>
+    </div>
+{% endblock %}
