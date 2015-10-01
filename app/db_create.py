@@ -15,7 +15,7 @@ if __name__ == '__main__':
     quote_time = utc.localize(datetime(year=2015, month=9, day=30,
                                        hour=21, minute=36, second=50))
 
-    row_obj = FXQuotes(provider='Transfer Wise',
+    row_obj = FXQuotes(provider='TransferWise',
                        provider_href='https:/www.transferwise.com',
                        quote_time=quote_time,
                        source_currency='GBP',

@@ -1,6 +1,7 @@
 import requests
 import ast
 import pandas as pd
+from sqlalchemy import create_engine
 
 def scrape_transferwise(sourceValue, sourceCurrencyCode, targetCurrencyCode):
     
@@ -26,13 +27,9 @@ def scrape_transferwise(sourceValue, sourceCurrencyCode, targetCurrencyCode):
     response = requests.post(url=url, data=data)
     results = ast.literal_eval(response.content)
     results['date'] = pd.to_datetime(response.headers['date'], utc=True)
-    import ipdb; ipdb.set_trace()
+    
     return results
 
-
-
-#sourceCurrencyCode = 'GBP'
-#targetCurrencyCode = 'USD'
 
 
 availableSourceCurrencies = ['EUR','GBP', 'USD', 'PLN', 'CHF', 'NOK', 
@@ -48,11 +45,12 @@ availableTargeteCurrencies = ['EUR','GBP', 'USD', 'PLN', 'CHF', 'NOK',
 
 sourceCurrencyCode = 'GBP'
 targetCurrencyCode = 'USD'
-sourceValues = [100] #, 500, 1000, 5000, 10000, 50000, 100000]
+sourceValues = [100, 500, 1000, 5000, 10000, 50000, 100000]
 targetValues = []
 quotetimes = []
 fees = []
-provider = 'transferwise.com'
+provider = 'TransferWise'
+provider_href = 'transferwise.com'
 
 for sourceValue in sourceValues:
 
@@ -70,10 +68,15 @@ for sourceValue in sourceValues:
     quotetimes.append(results['date'])
 
 results_df = pd.DataFrame({'fee': fees,
-                           'sourceValue': sourceValues,
-                           'targetValue': targetValues,
-                           'sourceCurrencyCode': sourceCurrencyCode,
-                           'targetCurrencyCode': targetCurrencyCode,
-                           'quotetime': quotetimes,
-                           'provider': provider})
-print results_df
+                           'source_value': sourceValues,
+                           'target_value': targetValues,
+                           'source_currency': sourceCurrencyCode,
+                           'target_currency': targetCurrencyCode,
+                           'quote_time': quotetimes,
+                           'provider': provider,
+                           'provider_href': provider_href,
+                           })
+
+con = create_engine('sqlite:///../app/fx_quotes.db')
+results_df.to_sql(name='fx_quotes', con=con, if_exists='append', index=False) 
+

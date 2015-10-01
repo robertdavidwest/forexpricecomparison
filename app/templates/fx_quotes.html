@@ -2,6 +2,7 @@
 {% block content %}
     <h1>Forex Price Comparison</h1>
     <div class="filter-data">
+        <div class="lead">Under Construction...</div>
         <h3>Compare dozens of brokers and other sources of foreign exchange:</h3>
             <form action = "{{ url_for('quote_table') }}" method="post">
                 {{ form.csrf_token }}
@@ -44,6 +45,7 @@
     <div class="entries">
         <br>
         <br>
+        <div class="lead">Live Quote stream:</div>
         <table class="table table-striped">
             <thead>
                 <tr>
