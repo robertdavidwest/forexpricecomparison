@@ -2,7 +2,6 @@
 
 from datetime import datetime
 import pytz
-from pytz import timezone
 from views import db
 from models import FXQuotes
 
