@@ -27,3 +27,4 @@ if __name__ == '__main__':
 
     # commit the changes
     db.session.commit()
+    
