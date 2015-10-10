@@ -78,6 +78,6 @@ results_df = pd.DataFrame({'fee': fees,
                            })
 SQLALCHEMY_DATABASE_URI = 'mysql+mysqldb://robertdavidwest:test@robertdavidwest.mysql.pythonanywhere-services.com/robertdavidwest$fx_quotes'
 con = create_engine(SQLALCHEMY_DATABASE_URI)
-#con = create_engine('sqlite:///../app/fx_quotes.db')
+#con = create_engine('sqlite:///../project/fx_quotes.db')
 results_df.to_sql(name='fx_quotes', con=con, if_exists='append', index=False) 
 
