@@ -2,8 +2,8 @@
 
 from datetime import datetime
 import pytz
-from views import db
-from models import FXQuotes
+from project import db
+from project.models import FXQuotes
 
 if __name__ == '__main__':
     # create the database and the db table

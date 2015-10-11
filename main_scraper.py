@@ -1,7 +1,8 @@
 import requests
 import ast
 import pandas as pd
-from sqlalchemy import create_engine
+
+from project import db
 
 def scrape_transferwise(sourceValue, sourceCurrencyCode, targetCurrencyCode):
     
@@ -76,8 +77,16 @@ results_df = pd.DataFrame({'fee': fees,
                            'provider': provider,
                            'provider_href': provider_href,
                            })
+
+results_df.to_sql(name='fx_quotes', con=db, if_exists='append', index=False)
+
+# old versions before direct db import from poject
+'''
+from sqlalchemy import create_engine
 SQLALCHEMY_DATABASE_URI = 'mysql+mysqldb://robertdavidwest:test@robertdavidwest.mysql.pythonanywhere-services.com/robertdavidwest$fx_quotes'
 con = create_engine(SQLALCHEMY_DATABASE_URI)
-#con = create_engine('sqlite:///../project/fx_quotes.db')
-results_df.to_sql(name='fx_quotes', con=con, if_exists='append', index=False) 
+results_df.to_sql(name='fx_quotes', con=con, if_exists='append', index=False)
 
+con = create_engine('sqlite:///project/fx_quotes.db')
+results_df.to_sql(name='fx_quotes', con=con, if_exists='append', index=False) 
+'''
