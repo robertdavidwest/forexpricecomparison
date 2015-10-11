@@ -1,6 +1,5 @@
 # forms.py
 
-
 from flask_wtf import Form
 from wtforms import (TextField, DateField, IntegerField, SelectField,
                      PasswordField)

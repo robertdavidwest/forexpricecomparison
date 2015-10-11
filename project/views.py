@@ -1,19 +1,9 @@
 # views.py
-from flask import (Flask, flash, redirect, render_template, request, session,
+from flask import (flash, redirect, render_template, request, session,
     url_for)
 
-from flask.ext.sqlalchemy import SQLAlchemy
-from sqlalchemy.exc import IntegrityError
-from functools import wraps
-
-# config
-app = Flask(__name__)
-app.config.from_object('config')
-db = SQLAlchemy(app)
-
+from project import app, db
 from forms import QueryFXQuotes
-
-# import the models
 from models import FXQuotes
 
 
@@ -30,7 +20,6 @@ def quote_table():
 
     current_view = db.session.query(FXQuotes)
     if request.method == 'GET':
-        print form.source_currency.data
         return render_template('fx_quotes.html', form=form,
                                current_view=current_view)
 

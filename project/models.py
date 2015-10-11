@@ -1,7 +1,7 @@
 # models.py
 import pytz
 utc = pytz.utc
-from views import db
+from project import db
 
 Column = db.Column
 TEXT = db.TEXT
