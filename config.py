@@ -3,7 +3,7 @@ import os
 
 CSRF_ENABLED = True
 SECRET_KEY = 'TEST123'
-flavor = 'sqlite'
+flavor = 'mysql'
 
 if flavor == 'sqlite':
     # grab the folder where the script runs
