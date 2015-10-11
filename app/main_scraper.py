@@ -1,10 +1,10 @@
 import requests
 import ast
 import pandas as pd
-from sqlalchemy import create_engine
-
+from views import db
+conn = db.engine.connect().connection
 def scrape_transferwise(sourceValue, sourceCurrencyCode, targetCurrencyCode):
-    
+
     currencyCodeToId = {'AED': 70, 'AUD': 9, 'BGN': 41, 'BRL': 42,
                     'CAD': 10, 'CHF': 5, 'CLP': 43, 'COP': 44,
                     'CZK': 40, 'DKK': 8, 'EUR': 1, 'GBP': 2,
@@ -21,23 +21,23 @@ def scrape_transferwise(sourceValue, sourceCurrencyCode, targetCurrencyCode):
     url = 'https://transferwise.com/request/initiatePageRate?calculatorView=1&lang=us&invertSavings='
     data = {'fixType': 'SOURCE',
             'sourceValue': sourceValue,
-            'sourceCurrencyId': sourceCurrencyId,   
+            'sourceCurrencyId': sourceCurrencyId,
             'targetCurrencyId': targetCurrencyId
     }
     response = requests.post(url=url, data=data)
     results = ast.literal_eval(response.content)
     results['date'] = pd.to_datetime(response.headers['date'], utc=True)
-    
+
     return results
 
 
 
-availableSourceCurrencies = ['EUR','GBP', 'USD', 'PLN', 'CHF', 'NOK', 
+availableSourceCurrencies = ['EUR','GBP', 'USD', 'PLN', 'CHF', 'NOK',
                             'SEK', 'DKK', 'AUD', 'HUF', 'GEL', 'RON',
-                            'CZK', 'BGN'] 
+                            'CZK', 'BGN']
 
-availableTargeteCurrencies = ['EUR','GBP', 'USD', 'PLN', 'CHF', 'NOK', 
-                              'SEK', 'DKK', 'AUD', 'CAD', 'HUF', 'GEL', 
+availableTargeteCurrencies = ['EUR','GBP', 'USD', 'PLN', 'CHF', 'NOK',
+                              'SEK', 'DKK', 'AUD', 'CAD', 'HUF', 'GEL',
                               'HKD', 'INR', 'IDR', 'MYR', 'MXN', 'RON',
                               'TRY', 'NZD', 'PHP', 'SGD', 'THB', 'CZK',
                               'BGN', 'BRL', 'CLP', 'COP', 'NGN', 'PKR',
@@ -56,7 +56,7 @@ for sourceValue in sourceValues:
 
     results = scrape_transferwise(
         sourceValue=sourceValue,
-        sourceCurrencyCode=sourceCurrencyCode, 
+        sourceCurrencyCode=sourceCurrencyCode,
         targetCurrencyCode=targetCurrencyCode
     )
     # str to float
@@ -76,8 +76,6 @@ results_df = pd.DataFrame({'fee': fees,
                            'provider': provider,
                            'provider_href': provider_href,
                            })
-SQLALCHEMY_DATABASE_URI = 'mysql+mysqldb://robertdavidwest:test@robertdavidwest.mysql.pythonanywhere-services.com/robertdavidwest$fx_quotes'
-con = create_engine(SQLALCHEMY_DATABASE_URI)
-#con = create_engine('sqlite:///../app/fx_quotes.db')
-results_df.to_sql(name='fx_quotes', con=con, if_exists='append', index=False) 
+
+results_df.to_sql(name='fx_quotes', con=conn, flavor='mysql', if_exists='append', index=False)
 
