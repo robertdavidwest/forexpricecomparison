@@ -2,7 +2,7 @@ import requests
 import ast
 import pandas as pd
 from views import db
-conn = db.engine.connect().connection
+
 def scrape_transferwise(sourceValue, sourceCurrencyCode, targetCurrencyCode):
 
     currencyCodeToId = {'AED': 70, 'AUD': 9, 'BGN': 41, 'BRL': 42,
@@ -26,7 +26,7 @@ def scrape_transferwise(sourceValue, sourceCurrencyCode, targetCurrencyCode):
     }
     response = requests.post(url=url, data=data)
     results = ast.literal_eval(response.content)
-    results['date'] = pd.to_datetime(response.headers['date'], utc=True)
+    results['date'] = pd.to_datetime(response.headers['date'])
 
     return results
 
@@ -77,5 +77,5 @@ results_df = pd.DataFrame({'fee': fees,
                            'provider_href': provider_href,
                            })
 
-results_df.to_sql(name='fx_quotes', con=conn, flavor='mysql', if_exists='append', index=False)
+results_df.to_sql(name='fx_quotes', con=db.engine, if_exists='append', index=False)
 

@@ -6,7 +6,7 @@ from views import db
 Column = db.Column
 TEXT = db.TEXT
 DATETIME = db.DATETIME
-DECIMAL = db.DECIMAL(9,6)
+NUMERIC = db.Numeric(20, 3)
 Integer = db.Integer
 
 
@@ -42,9 +42,9 @@ class FXQuotes(db.Model):
     quote_time = Column(DATETIME, nullable=False)
     source_currency = Column(TEXT, nullable=False)
     target_currency = Column(TEXT, nullable=False)
-    fee = Column(DECIMAL, nullable=False)
-    source_value = Column(DECIMAL, nullable=False)
-    target_value = Column(DECIMAL, nullable=False)
+    fee = Column(NUMERIC, nullable=False)
+    source_value = Column(NUMERIC, nullable=False)
+    target_value = Column(NUMERIC, nullable=False)
 
     def __init__(self, provider, provider_href, quote_time, source_currency,
                  target_currency, fee, source_value, target_value):

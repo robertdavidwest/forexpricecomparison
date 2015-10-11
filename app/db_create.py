@@ -1,7 +1,6 @@
 # db_create.py
 
 from datetime import datetime
-import pytz
 from views import db
 from models import FXQuotes
 
@@ -10,9 +9,8 @@ if __name__ == '__main__':
     db.create_all()
 
     # add one row of sample data - this is actual data
-    utc = pytz.utc
-    quote_time = utc.localize(datetime(year=2015, month=9, day=30,
-                                       hour=21, minute=36, second=50))
+    quote_time = datetime(year=2015, month=9, day=30,
+                          hour=21, minute=36, second=50)
 
     row_obj = FXQuotes(provider='TransferWise',
                        provider_href='https:/www.transferwise.com',
@@ -27,4 +25,4 @@ if __name__ == '__main__':
 
     # commit the changes
     db.session.commit()
-    
+
