@@ -33,6 +33,22 @@ def scrape_transferwise(sourceValue, sourceCurrencyCode, targetCurrencyCode):
     return results
 
 
+def ozforex(FromCurrency, ToCurrency, FromAmount):
+
+    url = 'http://www.ozforex.com.au/currency-converter-martini'
+    data = {
+        'FromAmount': FromAmount,
+        'FromCurrency': FromCurrency,
+        'ToCurrency': ToCurrency
+    }
+    response = requests.post(url, data=data)
+    content = response.content.replace('null', '""')
+    results = ast.literal_eval(content)
+    results['date'] = pd.to_datetime(response.headers['date'])
+
+    return results
+
+
 def scrape_travelex(targetCurrencyCode, site):
     '''Convert USD dollar into other currencies, specified by
     targetCurrencyCode in the amount sourceValue'''
@@ -54,12 +70,11 @@ def scrape_travelex(targetCurrencyCode, site):
 
 
 if __name__ == '__main__':
-    scrape_travelex(targetCurrencyCode='GBP', site='us')
 
     # Transferwise available currencies
     availableSourceCurrencies = ['EUR','GBP', 'USD', 'PLN', 'CHF', 'NOK',
-                                'SEK', 'DKK', 'AUD', 'HUF', 'GEL', 'RON',
-                                'CZK', 'BGN']
+                                 'SEK', 'DKK', 'AUD', 'HUF', 'GEL', 'RON',
+                                 'CZK', 'BGN']
 
     availableTargeteCurrencies = ['EUR','GBP', 'USD', 'PLN', 'CHF', 'NOK',
                                   'SEK', 'DKK', 'AUD', 'CAD', 'HUF', 'GEL',
@@ -74,57 +89,95 @@ if __name__ == '__main__':
     targetValues = []
     quotetimes = []
     fees = []
-    provider = []
-    provider_href = []
+    providers = []
+    providers_href = []
     sourceValues = []
     details = []
+
+    def add_row(targetValue, sourceValue, quotetime, fee, provider,
+                provider_href, detail):
+        '''
+
+        '''
+        targetValues.append(targetValue)
+        sourceValues.append(sourceValue)
+        quotetimes.append(quotetime)
+        fees.append(fee)
+        providers.append(provider)
+        providers_href.append(provider_href)
+        details.append(detail)
 
     sourceValuesForLoop = [100, 500, 1000, 5000, 10000, 50000, 100000]
     for sourceValue in sourceValuesForLoop:
 
-        # Transferwise Scrape
+        ### Transferwise Scrape ###
         results_transferwise = scrape_transferwise(
             sourceValue=sourceValue,
             sourceCurrencyCode=sourceCurrencyCode,
             targetCurrencyCode=targetCurrencyCode
         )
-
-        # str to float
         targetValue = float(results_transferwise['targetValue'].replace(',', ''))
         fee = float(results_transferwise['fee'].replace(',', ''))
 
-        targetValues.append(targetValue)
-        sourceValues.append(sourceValue)
-        fees.append(fee)
-        quotetimes.append(results_transferwise['date'])
-        provider.append('TransferWise')
-        provider_href.append('transferwise.com')
-        details.append('Transfer from US to UK bank account')
+        add_row(targetValue=targetValue,
+                sourceValue=sourceValue,
+                quotetime=results_transferwise['date'],
+                fee=fee,
+                provider='TransferWise',
+                provider_href='transferwise.com',
+                detail='Transfer from US to UK bank account'
+                )
 
-        # Travelex Scrape
+        ### OzForex Scrape ###
+        results_oz = ozforex(FromCurrency=sourceCurrencyCode,
+                             ToCurrency=targetCurrencyCode,
+                             FromAmount=sourceValue)
+        # OzForex has a flat fee on transactions under 10,000 AUD, I convert this
+        # to USD and apply. Really this is probably only available from Aus
+        # but this should give a good initial view of the price available at
+        # USForex does not have a quote without a login
+        r = ozforex(FromCurrency='AUD', ToCurrency='USD', FromAmount=10000)
+        use_min_for_fee = r['ToAmount']
+        aud_usd = r['FromRate']
+        if sourceValue < use_min_for_fee:
+            fee = 15*aud_usd
+        else:
+            fee = 0
+
+        add_row(targetValue=results_oz['ToAmount'],
+                sourceValue=sourceValue,
+                quotetime=results_oz['date'],
+                fee=fee,
+                provider='OzForex',
+                provider_href='http://www.ozforex.com.au/',
+                detail='*No fees for transfers over AUD$10,000. $15 flat fee '
+                       'per recipient for transfers under AUD$10,000 '
+                       '**Rates subject to change and for individuals only'
+                )
+
+        ### Travelex Scrape ###
         results_travelex = scrape_travelex(targetCurrencyCode='GBP', site='us')
-
-        sourceValues.append(sourceValue)
-        quotetimes.append(results_travelex['date'])
-        provider.append('Travelex - Cash')
-        provider_href.append('www.travelex.com/rates')
-        details.append('Pay USD online, GBP Cash delivered, free Next Day Delivery on order above $1000, no orders below $250')
 
         rate = float(results_travelex['rate'])
         targetValue = sourceValue * rate
 
         if sourceValue < 250:
-            fees.append(sqlalchemy.sql.null())
-            targetValues.append(sqlalchemy.sql.null())
-            details.append('Rate no available with source value below $250')
+            fee =  sqlalchemy.sql.null()
+            targetValue = sqlalchemy.sql.null()
         elif (250 <= sourceValue) & (sourceValue < 1000):
-            fees.append(9.99)
-            targetValues.append(targetValue)
-            details.append('Pay USD online, GBP Cash delivered, free Next Day Delivery on orders above $1000, no orders below $250')
+            fee = 9.99
         else:
-            fees.append(0)
-            targetValues.append(targetValue)
-            details.append('Pay USD online, GBP Cash delivered, free Next Day Delivery on orders above $1000, no orders below $250')
+            fee = 0
+
+        add_row(targetValue=targetValue,
+                sourceValue=sourceValue,
+                quotetime=results_travelex['date'],
+                fee=fee,
+                provider='Travelex - Cash',
+                provider_href='www.travelex.com/rates',
+                detail='Pay USD online, GBP Cash delivered, free Next Day Delivery '
+                       'on orders above $1000, no orders below $250'
+                )
 
     results_df = pd.DataFrame({'fee': fees,
                                'source_value': sourceValues,
@@ -132,9 +185,9 @@ if __name__ == '__main__':
                                'source_currency': sourceCurrencyCode,
                                'target_currency': targetCurrencyCode,
                                'quote_time': quotetimes,
-                               'provider': provider,
-                               'provider_href': provider_href,
+                               'provider': providers,
+                               'provider_href': providers_href,
                                'details': details,
                                })
-
+    import ipdb; ipdb.set_trace()
     results_df.to_sql(name='fx_quotes', con=db.engine, if_exists='append', index=False)
