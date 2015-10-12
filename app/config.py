@@ -28,13 +28,9 @@ elif flavor == 'mysql':
     pwords_filename = os.path.join(basedir, 'pwords.txt')
     with open(pwords_filename, 'r') as file:
         f=file.read()
-
-
         pwords = ast.literal_eval(f)
-        print pwords
-        print pwords['fx_quotes']
-
         MYSQL_PASSWORD = pwords['fx_quotes']
+
     SQLALCHEMY_DATABASE_URI = 'mysql+mysqldb://{}:{}@{}/{}'.format(USERNAME,
                                                                    MYSQL_PASSWORD,
                                                                    HOSTNAME,
