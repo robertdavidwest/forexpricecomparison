@@ -189,5 +189,5 @@ if __name__ == '__main__':
                                'provider_href': providers_href,
                                'details': details,
                                })
-    import ipdb; ipdb.set_trace()
+    
     results_df.to_sql(name='fx_quotes', con=db.engine, if_exists='append', index=False)
