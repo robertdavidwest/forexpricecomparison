@@ -31,51 +31,97 @@ def scrape_transferwise(sourceValue, sourceCurrencyCode, targetCurrencyCode):
     return results
 
 
+def scrape_travelex(targetCurrencyCode, site):
+    '''Convert USD dollar into other currencies, specified by
+    targetCurrencyCode in the amount sourceValue'''
 
-availableSourceCurrencies = ['EUR','GBP', 'USD', 'PLN', 'CHF', 'NOK',
-                            'SEK', 'DKK', 'AUD', 'HUF', 'GEL', 'RON',
-                            'CZK', 'BGN']
+    # sites - 'au', 'gb' or 'us'
 
-availableTargeteCurrencies = ['EUR','GBP', 'USD', 'PLN', 'CHF', 'NOK',
-                              'SEK', 'DKK', 'AUD', 'CAD', 'HUF', 'GEL',
-                              'HKD', 'INR', 'IDR', 'MYR', 'MXN', 'RON',
-                              'TRY', 'NZD', 'PHP', 'SGD', 'THB', 'CZK',
-                              'BGN', 'BRL', 'CLP', 'COP', 'NGN', 'PKR',
-                              'MAD', 'AED', 'UAH']
+    url = 'https://api.travelex.net/salt/rates/' \
+          'current?key=Travelex&site=/{}&productCodes={}'.format(site,
+                                                                 targetCurrencyCode)
 
-sourceCurrencyCode = 'GBP'
-targetCurrencyCode = 'USD'
-sourceValues = [100, 500, 1000, 5000, 10000, 50000, 100000]
-targetValues = []
-quotetimes = []
-fees = []
-provider = 'TransferWise'
-provider_href = 'transferwise.com'
+    response = requests.get(url)
+    content = response.content.replace('false', 'False')
+    content = ast.literal_eval(content)
 
-for sourceValue in sourceValues:
+    results = {}
+    results['date'] = pd.to_datetime(response.headers['date'])
+    results['rate'] = content['rates'][targetCurrencyCode]
+    return results
 
-    results = scrape_transferwise(
-        sourceValue=sourceValue,
-        sourceCurrencyCode=sourceCurrencyCode,
-        targetCurrencyCode=targetCurrencyCode
-    )
-    # str to float
-    targetValue = float(results['targetValue'].replace(',', ''))
-    fee = float(results['fee'].replace(',', ''))
 
-    targetValues.append(targetValue)
-    fees.append(fee)
-    quotetimes.append(results['date'])
+if __name__ == '__main__':
+    scrape_travelex(targetCurrencyCode='GBP', site='us')
 
-results_df = pd.DataFrame({'fee': fees,
-                           'source_value': sourceValues,
-                           'target_value': targetValues,
-                           'source_currency': sourceCurrencyCode,
-                           'target_currency': targetCurrencyCode,
-                           'quote_time': quotetimes,
-                           'provider': provider,
-                           'provider_href': provider_href,
-                           })
+    # Transferwise available currencies
+    availableSourceCurrencies = ['EUR','GBP', 'USD', 'PLN', 'CHF', 'NOK',
+                                'SEK', 'DKK', 'AUD', 'HUF', 'GEL', 'RON',
+                                'CZK', 'BGN']
 
-results_df.to_sql(name='fx_quotes', con=db.engine, if_exists='append', index=False)
+    availableTargeteCurrencies = ['EUR','GBP', 'USD', 'PLN', 'CHF', 'NOK',
+                                  'SEK', 'DKK', 'AUD', 'CAD', 'HUF', 'GEL',
+                                  'HKD', 'INR', 'IDR', 'MYR', 'MXN', 'RON',
+                                  'TRY', 'NZD', 'PHP', 'SGD', 'THB', 'CZK',
+                                  'BGN', 'BRL', 'CLP', 'COP', 'NGN', 'PKR',
+                                  'MAD', 'AED', 'UAH']
 
+    sourceCurrencyCode = 'USD'
+    targetCurrencyCode = 'GBP'
+
+    targetValues = []
+    quotetimes = []
+    fees = []
+    provider = []
+    provider_href = []
+    sourceValues = []
+    details = []
+
+    sourceValuesForLoop = [100, 500, 1000, 5000, 10000, 50000, 100000]
+    for sourceValue in sourceValuesForLoop:
+
+        # Transferwise Scrape
+        results_transferwise = scrape_transferwise(
+            sourceValue=sourceValue,
+            sourceCurrencyCode=sourceCurrencyCode,
+            targetCurrencyCode=targetCurrencyCode
+        )
+
+        # str to float
+        targetValue = float(results_transferwise['targetValue'].replace(',', ''))
+        fee = float(results_transferwise['fee'].replace(',', ''))
+
+        targetValues.append(targetValue)
+        sourceValues.append(sourceValue)
+        fees.append(fee)
+        quotetimes.append(results_transferwise['date'])
+        provider.append('TransferWise')
+        provider_href.append('transferwise.com')
+        details.append('Transfer from US to UK bank account')
+
+        # Travelex Scrape
+        results_travelex = scrape_travelex(targetCurrencyCode='GBP', site='us')
+
+        rate = float(results_travelex['rate'])
+        targetValue = sourceValue * rate
+
+        targetValues.append(targetValue)
+        sourceValues.append(sourceValue)
+        fees.append('0')
+        quotetimes.append(results_travelex['date'])
+        provider.append('Travelex - Cash')
+        provider_href.append('www.travelex.com/rates')
+        details.append('Pay USD online, GBP Cash delivered, free Next Day Delivery')
+
+    results_df = pd.DataFrame({'fee': fees,
+                               'source_value': sourceValues,
+                               'target_value': targetValues,
+                               'source_currency': sourceCurrencyCode,
+                               'target_currency': targetCurrencyCode,
+                               'quote_time': quotetimes,
+                               'provider': provider,
+                               'provider_href': provider_href,
+                               'details': details,
+                               })
+
+    results_df.to_sql(name='fx_quotes', con=db.engine, if_exists='append', index=False)

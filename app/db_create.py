@@ -14,6 +14,7 @@ if __name__ == '__main__':
 
     row_obj = FXQuotes(provider='TransferWise',
                        provider_href='https:/www.transferwise.com',
+                       details='Transfer from UK to US bank account',
                        quote_time=quote_time,
                        source_currency='GBP',
                        target_currency='USD',
