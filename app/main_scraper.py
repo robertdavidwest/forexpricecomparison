@@ -1,7 +1,9 @@
 import requests
 import ast
 import pandas as pd
+import numpy as np
 from views import db
+import sqlalchemy
 
 def scrape_transferwise(sourceValue, sourceCurrencyCode, targetCurrencyCode):
 
@@ -102,16 +104,27 @@ if __name__ == '__main__':
         # Travelex Scrape
         results_travelex = scrape_travelex(targetCurrencyCode='GBP', site='us')
 
-        rate = float(results_travelex['rate'])
-        targetValue = sourceValue * rate
-
-        targetValues.append(targetValue)
         sourceValues.append(sourceValue)
-        fees.append('0')
         quotetimes.append(results_travelex['date'])
         provider.append('Travelex - Cash')
         provider_href.append('www.travelex.com/rates')
-        details.append('Pay USD online, GBP Cash delivered, free Next Day Delivery')
+        details.append('Pay USD online, GBP Cash delivered, free Next Day Delivery on order above $1000, no orders below $250')
+
+        rate = float(results_travelex['rate'])
+        targetValue = sourceValue * rate
+
+        if sourceValue < 250:
+            fees.append(sqlalchemy.sql.null())
+            targetValues.append(sqlalchemy.sql.null())
+            details.append('Rate no available with source value below $250')
+        elif (250 <= sourceValue) & (sourceValue < 1000):
+            fees.append(9.99)
+            targetValues.append(targetValue)
+            details.append('Pay USD online, GBP Cash delivered, free Next Day Delivery on orders above $1000, no orders below $250')
+        else:
+            fees.append(0)
+            targetValues.append(targetValue)
+            details.append('Pay USD online, GBP Cash delivered, free Next Day Delivery on orders above $1000, no orders below $250')
 
     results_df = pd.DataFrame({'fee': fees,
                                'source_value': sourceValues,

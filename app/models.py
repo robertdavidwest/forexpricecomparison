@@ -16,9 +16,9 @@ class FXQuotes(db.Model):
     quote_time = Column(DATETIME, nullable=False)
     source_currency = Column(TEXT, nullable=False)
     target_currency = Column(TEXT, nullable=False)
-    fee = Column(NUMERIC, nullable=False)
+    fee = Column(NUMERIC, nullable=True)
     source_value = Column(NUMERIC, nullable=False)
-    target_value = Column(NUMERIC, nullable=False)
+    target_value = Column(NUMERIC, nullable=True)
 
     def __init__(self, provider, provider_href, details, quote_time,
                  source_currency, target_currency, fee, source_value,
